@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ganglion.mapper.AddressMapper">
+    <resultMap id="BaseResultMap" type="com.ganglion.entity.Address">
+        <id column="Id" property="id" jdbcType="VARCHAR"/>
+        <result column="Name" property="name" jdbcType="VARCHAR"/>
+        <result column="App" property="app" jdbcType="VARCHAR"/>
+        <result column="IsDelete" property="isDelete" jdbcType="BOOLEAN"/>
+        <result column="OrderIndex" property="orderIndex" jdbcType="INTEGER"/>
+        <result column="Remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="CreatedBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CreatedTime" property="createdTime" jdbcType="DATE"/>
+        <result column="CreatedDept" property="createdDept" jdbcType="VARCHAR"/>
+        <result column="UpdatedBy" property="updatedBy" jdbcType="VARCHAR"/>
+        <result column="UpdatedTime" property="updatedTime" jdbcType="DATE"/>
+        <result column="UpdatedDept" property="updatedDept" jdbcType="VARCHAR"/>
+        <result column="AddressType" property="addressType" jdbcType="VARCHAR"/>
+        <result column="DetailedAddress" property="detailedAddress" jdbcType="VARCHAR"/>
+        <result column="AssociatedResources" property="associatedResources" jdbcType="VARCHAR"/>
+        <result column="GPS" property="gps" jdbcType="VARCHAR"/>
+        <result column="SVG" property="svg" jdbcType="VARCHAR"/>
+        <result column="ParentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="ProjectId" property="projectId" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="getAllAddressByProjectId" resultType="com.ganglion.entity.Address">
+        select * from ZM_GM_Address
+        where ProjectId = #{projectId} and IsDelete = 0
+        order by OrderIndex asc
+    </select>
+    <select id="getDeviceWithAddressCount" resultType="java.lang.Integer">
+        select count(*) from ZM_GM_Device as device
+        where IsDelete = 0 and device.AddressId in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <update id="deleteAddress">
+        update ZM_GM_Address set
+        UpdatedBy = #{updatedBy},
+        UpdatedDept = #{updatedDept},
+        UpdatedTime = #{updatedTime},
+        IsDelete = 1
+        where Id in
+        <foreach item="item" index="index" collection="keys"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <resultMap id="childAddressResultMap" type="com.ganglion.model.AddressDTO">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="Name" property="name" jdbcType="VARCHAR"/>
+        <result column="AddressType" property="addressType" jdbcType="VARCHAR"/>
+        <result column="Remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="DetailedAddress" property="detailedAddress" jdbcType="VARCHAR"/>
+        <result column="AssociatedResources" property="associatedResources" jdbcType="VARCHAR"/>
+        <result column="GPS" property="gps" jdbcType="VARCHAR"/>
+        <result column="SVG" property="svg" jdbcType="VARCHAR"/>
+        <result column="ProjectId" property="projectId" jdbcType="VARCHAR"/>
+        <collection column="Id" property="relationDeviceList" ofType="com.ganglion.model.DeviceDTO"
+                    select="getRelationDevice"/>
+    </resultMap>
+
+    <select id="getChildAddressByParentId" resultMap="childAddressResultMap">
+        select *
+        from ZM_GM_Address
+        <trim prefix="where" prefixOverrides="AND |OR ">
+            <if test="parentId!=null">
+                ParentId = #{parentId}
+            </if>
+            <if test="parentId==null">
+                ParentId is null
+            </if>
+        </trim>
+        and IsDelete = 0
+    </select>
+
+    <select id="getRelationDevice" resultType="com.ganglion.model.DeviceDTO">
+      select
+        Id as id,
+        Name as name,
+        ProjectId as projectId,
+        DeviceType as deviceType
+      from ZM_GM_Device
+      where AddressId = #{id} and IsDelete = 0
+    </select>
+</mapper>

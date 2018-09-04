@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ganglion.mapper.DeviceMapper">
+    <resultMap id="BaseResultMap" type="com.ganglion.entity.Device">
+        <id column="Id" property="id" jdbcType="VARCHAR"/>
+        <result column="Name" property="name" jdbcType="VARCHAR"/>
+        <result column="IsDelete" property="isDelete" jdbcType="BOOLEAN"/>
+        <result column="OrderIndex" property="orderIndex" jdbcType="INTEGER"/>
+        <result column="Remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="CreatedBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CreatedTime" property="createdTime" jdbcType="DATE"/>
+        <result column="CreatedDept" property="createdDept" jdbcType="VARCHAR"/>
+        <result column="UpdatedBy" property="updatedBy" jdbcType="VARCHAR"/>
+        <result column="UpdatedTime" property="updatedTime" jdbcType="DATE"/>
+        <result column="UpdatedDept" property="updatedDept" jdbcType="VARCHAR"/>
+        <result column="AddType" property="addType" jdbcType="VARCHAR"/>
+        <result column="Source" property="source" jdbcType="VARCHAR"/>
+        <result column="ProjectId" property="projectId" jdbcType="VARCHAR"/>
+        <result column="AddressId" property="addressId" jdbcType="VARCHAR"/>
+        <result column="ParentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="DeviceKey" property="deviceKey" jdbcType="VARCHAR"/>
+        <result column="ProductKey" property="productKey" jdbcType="VARCHAR"/>
+        <result column="DeviceType" property="deviceType" jdbcType="VARCHAR"/>
+        <result column="InstallationState" property="installationState" jdbcType="VARCHAR"/>
+        <result column="MaintenanceStatus" property="maintenanceStatus" jdbcType="VARCHAR"/>
+        <result column="MaintenanceTime" property="maintenanceTime" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getDeviceList" resultType="com.ganglion.model.DeviceDTO">
+        select a.*,b.Name as projectName,c.Name as addressName
+        from ZM_GM_Device a
+        left join ZM_GM_Project b
+        on a.ProjectId = b.Id
+        left join ZM_GM_Address c
+        on a.AddressId = c.Id
+        <trim prefix="WHERE" prefixOverrides="AND |OR ">
+            <if test="projectId!=null">
+                a.ProjectId = #{projectId}
+            </if>
+            <if test="addType!=null">
+                and a.AddType = #{addType}
+            </if>
+            <if test="source!=null">
+                and a.Source = #{source}
+            </if>
+            <if test="maintenanceStatus!=null">
+                and a.MaintenanceStatus = #{maintenanceStatus}
+            </if>
+            <if test="queryCondition!=null">
+                and a.Name like '%${queryCondition}%' or b.Name like '%${queryCondition}%'
+            </if>
+            and a.IsDelete != 1
+        </trim>
+        <trim prefix="order by" prefixOverrides=",">
+            <if test="sortColumn!=null">
+                ,a.${sortColumn}
+            </if>
+            <if test="sortColumn==null">
+                ,a.CreatedTime
+            </if>
+        </trim>
+        <if test="sortDirection==null">
+            desc
+        </if>
+        <if test="sortDirection!=null">
+            ${sortDirection}
+        </if>
+    </select>
+
+    <select id="getDeviceInAddressId" resultType="com.ganglion.model.DeviceDTO">
+        select distinct
+        Id as id,
+        Name as name,
+        ProjectId as projectId,
+        DeviceType as deviceType
+        from ZM_GM_Device
+        where IsDelete = 0 and AddressId in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getDeviceById" resultType="com.ganglion.model.DeviceDTO">
+        select a.*,b.Name as projectName,c.Name as addressName
+        from ZM_GM_Device a
+        left join ZM_GM_Project b
+        on a.ProjectId = b.Id
+        left join ZM_GM_Address c
+        on a.AddressId = c.Id
+        where a.Id = #{id}
+    </select>
+
+    <update id="deleteDeviceByIds">
+        update ZM_GM_Device set
+        UpdatedBy = #{updatedBy},
+        UpdatedDept = #{updatedDept},
+        UpdatedTime = #{updatedTime},
+        IsDelete = 1
+        where Id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getWFInstallFailedDeviceList" resultType = "com.ganglion.entity.Device">
+        select c.*
+        from ZM_GM_WorkList a
+        inner join ZM_GM_WorkListDetail b
+        on a.Id = b.WorkListId
+        inner join ZM_GM_Device c
+        on b.DeviceId = c.Id
+        where c.IsDelete != 1
+        and c.InstallationState = 'ZM_GM_DeviceInstallationState_InstallFailed'
+        and a.Id in
+        <foreach item="item" index="index" collection="workListIds"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getNotInstallDeviceList" resultType="com.ganglion.entity.Device">
+        select *
+        from ZM_GM_Device
+        where IsDelete != 1
+        and InstallationState = 'ZM_GM_DeviceInstallationState_NotInstalled'
+        and Id in
+        <foreach item="item" index="index" collection="deviceIds"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

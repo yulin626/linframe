@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ganglion.mapper.ProjectMapper">
+    <resultMap id="BaseResultMap" type="com.ganglion.entity.Project">
+        <id column="Id" property="id" jdbcType="VARCHAR"/>
+        <result column="Name" property="name" jdbcType="VARCHAR"/>
+        <result column="IsDelete" property="isDelete" jdbcType="BOOLEAN"/>
+        <result column="OrderIndex" property="orderIndex" jdbcType="INTEGER"/>
+        <result column="Remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="CreatedBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CreatedTime" property="createdTime" jdbcType="DATE"/>
+        <result column="CreatedDept" property="createdDept" jdbcType="VARCHAR"/>
+        <result column="UpdatedBy" property="updatedBy" jdbcType="VARCHAR"/>
+        <result column="UpdatedTime" property="updatedTime" jdbcType="DATE"/>
+        <result column="UpdatedDept" property="updatedDept" jdbcType="VARCHAR"/>
+        <result column="Introduction" property="introduction" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getProjectList" resultType="com.ganglion.model.ProjectDTO" parameterType="java.lang.String">
+        select * from ZM_GM_Project
+        <trim prefix="where" prefixOverrides="AND |OR ">
+            <if test="queryCondition!=null">
+                Name like '%${queryCondition}%' or Introduction like '%${queryCondition}%' or Remark like '%${queryCondition}%'
+            </if>
+            and IsDelete != 1
+        </trim>
+        <trim prefix="order by" prefixOverrides=",">
+            <if test="sortColumn!=null">
+                ,${sortColumn}
+            </if>
+            <if test="sortColumn==null">
+                ,CreatedTime
+            </if>
+        </trim>
+        <if test="sortDirection==null">
+            desc
+        </if>
+        <if test="sortDirection!=null">
+            ${sortDirection}
+        </if>
+    </select>
+</mapper>

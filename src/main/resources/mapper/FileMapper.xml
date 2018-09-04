@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ganglion.mapper.FileMapper">
+    <resultMap id="BaseResultMap" type="com.ganglion.entity.File">
+        <id column="Id" property="id" jdbcType="VARCHAR"/>
+        <result column="IsDelete" property="isDelete" jdbcType="BOOLEAN"/>
+        <result column="OrderIndex" property="orderIndex" jdbcType="INTEGER"/>
+        <result column="Remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="CreatedBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CreatedTime" property="createdTime" jdbcType="DATE"/>
+        <result column="CreatedDept" property="createdDept" jdbcType="VARCHAR"/>
+        <result column="UpdatedBy" property="updatedBy" jdbcType="VARCHAR"/>
+        <result column="UpdatedTime" property="updatedTime" jdbcType="DATE"/>
+        <result column="UpdatedDept" property="updatedDept" jdbcType="VARCHAR"/>
+        <result column="FileName" property="fileName" jdbcType="VARCHAR"/>
+        <result column="Size" property="size" jdbcType="BIGINT"/>
+        <result column="ExtensionName" property="extensionName" jdbcType="VARCHAR"/>
+    </resultMap>
+</mapper>

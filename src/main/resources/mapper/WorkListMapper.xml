@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ganglion.mapper.WorkListMapper">
+    <resultMap id="BaseResultMap" type="com.ganglion.entity.WorkList">
+        <id column="Id" property="id" jdbcType="VARCHAR"/>
+        <result column="Name" property="name" jdbcType="VARCHAR"/>
+        <result column="IsDelete" property="isDelete" jdbcType="BOOLEAN"/>
+        <result column="OrderIndex" property="orderIndex" jdbcType="INTEGER"/>
+        <result column="Remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="CreatedBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CreatedTime" property="createdTime" jdbcType="DATE"/>
+        <result column="CreatedDept" property="createdDept" jdbcType="VARCHAR"/>
+        <result column="UpdatedBy" property="updatedBy" jdbcType="VARCHAR"/>
+        <result column="UpdatedTime" property="updatedTime" jdbcType="DATE"/>
+        <result column="UpdatedDept" property="updatedDept" jdbcType="VARCHAR"/>
+        <result column="No" property="no" jdbcType="VARCHAR"/>
+        <result column="ProjectId" property="projectId" jdbcType="VARCHAR"/>
+        <result column="Status" property="status" jdbcType="VARCHAR"/>
+        <result column="Type" property="type" jdbcType="VARCHAR"/>
+        <result column="Receiver" property="receiver" jdbcType="VARCHAR"/>
+        <result column="CloseTime" property="closeTime" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="getWorkListListData" parameterType="com.ganglion.model.WorkListQueryInfo"
+            resultType="com.ganglion.model.WorkListDTO">
+        select
+        w.Id as id,
+        w.Name as name,
+        w.ProjectId as projectId,
+        p.Name as projectName,
+        w.No as no,
+        w.Type as type,
+        w.Status as status,
+        w.CreatedTime as createdTime,
+        w.CloseTime as closeTime
+        from ZM_GM_WorkList as w
+        left join ZM_GM_Project as p
+        on w.ProjectId = p.Id
+        <trim prefix="where" prefixOverrides="AND |OR ">
+            <if test="type!=null">
+                w.Type = #{type}
+            </if>
+            <if test="status!=null">
+                and w.Status = #{status}
+            </if>
+            <if test="queryCondition!=null">
+                and w.No like '%${queryCondition}%'
+            </if>
+        </trim>
+        <trim prefix="order by" prefixOverrides=",">
+            <if test="sortColumn!=null">
+                ,${sortColumn}
+            </if>
+            <if test="sortColumn==null">
+                ,w.CreatedTime
+            </if>
+        </trim>
+        <if test="sortDirection==null">
+            desc
+        </if>
+        <if test="sortDirection!=null">
+            ${sortDirection}
+        </if>
+    </select>
+
+    <resultMap id="workListDetail" type="com.ganglion.model.WorkListDTO">
+        <id column="Id" property="id" jdbcType="VARCHAR"/>
+        <result column="Name" property="name" jdbcType="VARCHAR"/>
+        <result column="ProjectId" property="projectId" jdbcType="VARCHAR"/>
+        <result column="ProjectName" property="projectName" jdbcType="VARCHAR"/>
+        <result column="No" property="no" jdbcType="VARCHAR"/>
+        <result column="Receiver" property="receiver" jdbcType="VARCHAR"/>
+        <result column="ReceiverName" property="receiverName" jdbcType="VARCHAR"/>
+        <result column="Status" property="status" jdbcType="VARCHAR"/>
+        <result column="Type" property="type" jdbcType="VARCHAR"/>
+        <result column="CreatedTime" property="createdTime" jdbcType="DATE"/>
+        <result column="CloseTime" property="closeTime" jdbcType="DATE"/>
+        <result column="UpdatedTime" property="updatedTime" jdbcType="DATE"/>
+        <collection property="deviceList" ofType="com.ganglion.model.WorkListDetailDTO">
+            <id property="deviceId" column="DeviceId"/>
+            <result property="deviceName" column="DeviceName"/>
+            <result property="state" column="State"/>
+            <result property="question" column="Question"/>
+            <result property="addressId" column="AddressId"/>
+            <result property="installationState" column="InstallationState"/>
+            <result property="maintenanceStatus" column="MaintenanceStatus"/>
+        </collection>
+    </resultMap>
+
+    <select id="getWorkListDetailById"
+            resultMap="workListDetail">
+        select
+          w.Id as Id,
+          w.ProjectId,
+          p.Name as ProjectName,
+          w.No,
+          w.Receiver,
+          e.EmplName as ReceiverName,
+          w.Type,
+          w.Status,
+          w.CreatedTime,
+          w.CloseTime,
+          d.Id as DeviceId,
+          d.Name as DeviceName,
+          wd.State,
+          wd.Question,
+          d.AddressId,
+          d.InstallationState,
+          d.MaintenanceStatus,
+          w.UpdatedTime
+        from ZM_GM_WorkList as w
+        left join ZM_GM_WorkListDetail as wd on w.Id = wd.WorkListId
+        left join ZM_GM_Device as d on d.Id = wd.DeviceId
+        left join ZM_GM_Project as p on p.Id = w.ProjectId
+        left join ORG_Employee as e on w.Receiver = e.EmplID
+        where w.Id = #{id} and w.IsDelete = 0 and d.IsDelete = 0
+    </select>
+
+    <select id="getWorkListsByDevice" resultType="com.ganglion.model.WorkListDTO">
+        select b.Id as id,
+        b.Name as [name],
+        b.ProjectId as projectId,
+        b.No as [no],
+        b.Status as status,
+        b.Type as [type],
+        b.Receiver as receiver,
+        c.EmplName as receiverName,
+        b.CreatedTime as createdTime,
+        b.UpdatedTime as updatedTime
+        from ZM_GM_WorkListDetail a
+        inner join ZM_GM_WorkList b
+        on a.WorkListId = b.Id
+        left join ORG_Employee c
+        on b.Receiver = c.EmplID
+        where a.DeviceId = #{deviceId} and a.IsDelete != 1
+        and b.IsDelete != 1 and (b.Status = 'ZM_GM_WorkState_Process' or b.Status = 'ZM_GM_WorkState_Resolved')
+    </select>
+</mapper>
