@@ -1,21 +1,28 @@
 package com.ganglion.config;
 
+import com.ganglion.converter.MyMessageConverter;
+import com.ganglion.Interceptor.DemoInterceptor;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import tk.mybatis.spring.annotation.MapperScan;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.MultipartConfigElement;
 import javax.sql.DataSource;
+import java.util.List;
 
 
 @Configuration
@@ -23,8 +30,8 @@ import javax.sql.DataSource;
 @EnableAsync
 @EnableScheduling
 @EnableTransactionManagement(proxyTargetClass=true)
-@MapperScan({"com.ganglion.mapper"})
-public class SpringMvcConfig{
+@ComponentScan({"com.ganglion.*"})
+public class SpringMvcConfig implements WebMvcConfigurer {
 
     @Value("${spring.datasource.url}")
     private String dataSourceURL;
@@ -69,4 +76,32 @@ public class SpringMvcConfig{
         return sqlSessionFactory.getObject();
     }
 
+    /**
+     * 配置拦截器的Bean
+     */
+    @Bean
+    public DemoInterceptor demoInterceptor(){
+        return new DemoInterceptor();
+    }
+    /**
+     * 重写addInterceptor，注册拦截器
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(demoInterceptor());
+    }
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/index").setViewName("/index");
+    }
+
+    @Override
+    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(converter());
+    }
+    @Bean
+    public MyMessageConverter converter(){
+        return new MyMessageConverter();
+    }
 }

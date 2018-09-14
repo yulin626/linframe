@@ -22,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@ComponentScan(basePackages = "com.ganglion.config")
+@ComponentScan(basePackages = "com.ganglion.*")
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired

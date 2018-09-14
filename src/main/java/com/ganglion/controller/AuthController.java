@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 @EnableAutoConfiguration
 public class AuthController {
-    @Value("${jwt.header}")
+    @Value("Authorization")//("${jwt.header}")
     private String tokenHeader;
 
     @Autowired
